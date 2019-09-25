@@ -24,6 +24,10 @@
 #  endif
 #endif
 
+#ifndef SYMBOLIC_LINK_FLAG_DIRECTORY
+#  define SYMBOLIC_LINK_FLAG_DIRECTORY 0x1
+#endif
+
 /***************************************************************************/
 
 typedef struct DIR_int_s {
@@ -603,12 +607,12 @@ int32_t mz_os_read_symlink(const char *path, char *target_path, int32_t max_targ
         };
     } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
     REPARSE_DATA_BUFFER *reparse_data = NULL;
+    DWORD length = 0;
     HANDLE handle = NULL;
     wchar_t *path_wide = NULL;
     wchar_t *target_path_wide = NULL;
     uint32_t attribs = 0;
     uint8_t buffer[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
-    int32_t length = 0;
     int32_t target_path_len = 0;
     int32_t target_path_idx = 0;
     int32_t err = MZ_OK;
@@ -651,10 +655,10 @@ int32_t mz_os_read_symlink(const char *path, char *target_path, int32_t max_targ
 
                 if (target_path_utf8)
                 {
-                    strncpy(target_path, target_path_utf8, max_target_path - 1);
+                    strncpy(target_path, (const char *)target_path_utf8, max_target_path - 1);
                     target_path[max_target_path - 1] = 0;
                     /* Ensure directories have slash at the end so we can recreate them later */
-                    if (mz_os_is_dir(target_path_utf8) == MZ_OK)
+                    if (mz_os_is_dir((const char *)target_path_utf8) == MZ_OK)
                         mz_path_append_slash(target_path, max_target_path, MZ_PATH_SLASH_PLATFORM);
                     mz_os_utf8_string_delete(&target_path_utf8);
                 }
